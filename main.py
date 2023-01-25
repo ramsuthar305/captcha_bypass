@@ -1,9 +1,13 @@
 from selenium import webdriver
 from src import solveRecaptcha
+import sys
+import os
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from twocaptcha import TwoCaptcha
 
 driver = webdriver.Chrome()
-driver.get('https://www.georgiapublicnotice.com/(S(k1pbjkizbh11lvewno4ep5d3))/Details.aspx?SID=k1pbjkizbh11lvewno4ep5d3&ID=2711377')
-solveRecaptcha(driver) #FOR PREDICTION ON YOUR PC
-submit_button=driver.find_element_by_id("ctl00_ContentPlaceHolder1_PublicNoticeDetailsBody1_btnViewNotice")
-submit_button.click()   
+site_url = os.getenv('SITE_URL')
+driver.get(site_url)
+solveRecaptcha(driver)

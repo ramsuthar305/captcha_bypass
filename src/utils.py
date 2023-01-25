@@ -14,6 +14,12 @@ from requests import Session, post
 from PIL import Image
 from numpy import sqrt, argmax
 from shutil import rmtree
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from twocaptcha import TwoCaptcha
+
+site_url = os.getenv('SITE_URL')
 
 cdir = dirname(abspath(__file__))
 modelZip = pjoin(cdir, 'model.zip')
@@ -341,8 +347,25 @@ def solveByImage():
             else:
                 clickReloadButton()
 
+
+def solveByTwoCaptcha(driver):
+    sitekey= driver.find_element_by_class_name("recaptcha").get_attribute("data-sitekey")
+    api_key = os.getenv('API_KEY')
+    solver = TwoCaptcha(api_key)
+
+    try:
+        result = solver.solve_captcha(
+            site_key=sitekey,
+            page_url=site_url)
+        driver.execute_script(f'document.getElementById("g-recaptcha-response").innerHTML = "{result}";')
+        driver.execute_script('document.getElementById("ctl00_ContentPlaceHolder1_PublicNoticeDetailsBody1_btnViewNotice").click();')
+    except Exception as e:
+        sys.exit(e)
+
+
 def solveImage():
     solveByImage()
+
     result = getRecaptchaResponse()
     if result:
         return result
@@ -356,9 +379,11 @@ def solveRecaptcha(browser, server='', invisible=False):
                 with ZipFile(modelZip, 'r') as z:
                     z.extractall(cdir)
             except:
+                pass
                 installModel()
 
         if not exists(modelDir):
+            pass
             installModel()
         serverSolve = False
     else:
@@ -377,7 +402,11 @@ def solveRecaptcha(browser, server='', invisible=False):
             break
         except:
             pass
-    result = solveImage()
-    rmtree(picturesDir)
-    if result:
-        return result
+    solver = os.getenv('SOLVE_BY')
+    if solver=="two_captcha":
+        solveByTwoCaptcha(driver)
+    else:
+        result = solveImage()
+        rmtree(picturesDir)
+        if result:
+            return result
