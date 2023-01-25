@@ -372,6 +372,11 @@ def solveImage():
 
 def solveRecaptcha(browser, server='', invisible=False):
     global driver, serverSolve, serverUrl
+    solver = os.getenv('SOLVE_BY')
+    driver = browser
+    if solver=="two_captcha":
+        solveByTwoCaptcha(driver)
+        return
 
     if server == '':
         if exists(modelZip):
@@ -390,7 +395,6 @@ def solveRecaptcha(browser, server='', invisible=False):
         serverUrl = server
         serverSolve = True
 
-    driver = browser    
     if not invisible:
         getFrames(invisible)
         clickCheckBox()
@@ -402,11 +406,8 @@ def solveRecaptcha(browser, server='', invisible=False):
             break
         except:
             pass
-    solver = os.getenv('SOLVE_BY')
-    if solver=="two_captcha":
-        solveByTwoCaptcha(driver)
-    else:
-        result = solveImage()
-        rmtree(picturesDir)
-        if result:
-            return result
+    
+    result = solveImage()
+    rmtree(picturesDir)
+    if result:
+        return result
